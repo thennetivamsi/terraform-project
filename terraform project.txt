@@ -1,0 +1,61 @@
+* terraform project infrasetup (VPC, RDS, EC2(ONE , TWO ,THREE),BUCKETS,IAM (USER1,USER2,USER3 AND USER4) *
+
+
+provider "aws" {
+region = "ap-south-1"
+}
+/* 1.VPC vamsivpc */
+resource "aws_vpc" "vamsi_vpc" {
+cidr_block = "10.5.0.0/16"
+  tags = {
+Name = "vamsivpc"
+  }
+}
+/* 2.RDS vamsi database */
+resource "aws_db_instance" "default" {
+allocated_storage = 10
+engine = "mysql"
+engine_version = "5.7"
+instance_class = "db.t3.micro"
+db_name = "vamsidb"
+username = "vamsidatabase"
+password = "Vamsi1234"
+parameter_group_name = "default.mysql5.7"
+skip_final_snapshot = true
+}
+/* 3.EC2 instance 3 creation */
+resource "aws_instance" "webinstance" {
+ami = "ami-08df646e18b182346"
+instance_type = "t2.micro"
+count = length(var.instance_names)
+tags = {
+   Name = var.instance_names[count.index]
+}
+}
+
+variable "instance_names" {
+description = "EC2 INSTANCE"
+type = list(string)
+default = ["one" , "two" , "three"]
+}
+/* 4.S3 BUCKETS CREATION */
+resource "aws_s3_bucket" "vamsibucket" {
+  bucket = "my-tf-vamsi-bucket"
+
+  tags = {
+    Name        = "vamsi_bucket"
+    Environment = "Dev"
+  }
+}
+
+/* 5.IAM USERS SETUP */
+resource "aws_iam_user" "fresher" {
+   count = length(var.user_names)
+   name  = var.user_names[count.index]
+}
+
+variable "user_names" {
+description = "IAM USERS"
+type = list(string)
+default = ["user1" , "user2" , "user3" , "user4"]
+}
